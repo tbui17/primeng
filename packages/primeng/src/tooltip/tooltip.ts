@@ -1,6 +1,6 @@
 import { isPlatformBrowser } from '@angular/common';
 import { AfterViewInit, booleanAttribute, Directive, ElementRef, inject, Input, NgModule, NgZone, numberAttribute, OnDestroy, SimpleChanges, TemplateRef, ViewContainerRef } from '@angular/core';
-import { appendChild, fadeIn, findSingle, getOuterHeight, getOuterWidth, getViewport, getWindowScrollLeft, getWindowScrollTop, hasClass, removeChild, uuid } from '@primeuix/utils';
+import { appendChild, fadeIn, findSingle, getOuterHeight, getOuterWidth, getViewport, getWindowScrollLeft, getWindowScrollTop, hasClass, removeChild, toElement, uuid } from '@primeuix/utils';
 import { TooltipOptions } from 'primeng/api';
 import { BaseComponent } from 'primeng/basecomponent';
 import { ConnectedOverlayScrollHandler } from 'primeng/dom';
@@ -515,19 +515,35 @@ export class Tooltip extends BaseComponent implements AfterViewInit, OnDestroy {
     }
 
     getHostOffset() {
-        if (this.getOption('appendTo') === 'body' || this.getOption('appendTo') === 'target') {
-            let offset = this.el.nativeElement.getBoundingClientRect();
-            let targetLeft = offset.left + getWindowScrollLeft();
-            let targetTop = offset.top + getWindowScrollTop();
+        const appendTo = this.getOption('appendTo');
 
-            return { left: targetLeft, top: targetTop };
-        } else {
+        if (appendTo === 'body' || appendTo === 'target') {
+            return this.getAdjustedRect(this.getActiveElement(this.el.nativeElement));
+        }
+
+        const el = toElement(appendTo);
+
+        if (!(el instanceof Element)) {
             return { left: 0, top: 0 };
         }
+        return this.getAdjustedRect(this.getActiveElement(el));
+    }
+
+    private getAdjustedRect(el: Element) {
+        let offset = el.getBoundingClientRect();
+        let targetLeft = offset.left + getWindowScrollLeft();
+        let targetTop = offset.top + getWindowScrollTop();
+        return { left: targetLeft, top: targetTop };
+    }
+
+    private getActiveElement(el: Element) {
+        const res = el.nodeName.includes('P-') ? findSingle(el, '.p-component') : el;
+        return res as HTMLElement;
     }
 
     private get activeElement(): HTMLElement {
-        return this.el.nativeElement.nodeName.includes('P-') ? findSingle(this.el.nativeElement, '.p-component') : this.el.nativeElement;
+        const el = toElement(this.getOption('appendTo')) ?? this.el.nativeElement;
+        return this.getActiveElement(el);
     }
 
     alignRight() {
@@ -540,26 +556,29 @@ export class Tooltip extends BaseComponent implements AfterViewInit, OnDestroy {
 
     alignLeft() {
         this.preAlign('left');
+        const el = this.activeElement;
         let offsetLeft = getOuterWidth(this.container);
-        let offsetTop = (getOuterHeight(this.el.nativeElement) - getOuterHeight(this.container)) / 2;
+        let offsetTop = (getOuterHeight(el) - getOuterHeight(this.container)) / 2;
         this.alignTooltip(-offsetLeft, offsetTop);
     }
 
     alignTop() {
         this.preAlign('top');
-        let offsetLeft = (getOuterWidth(this.el.nativeElement) - getOuterWidth(this.container)) / 2;
+        const el = this.activeElement;
+        let offsetLeft = (getOuterWidth(el) - getOuterWidth(this.container)) / 2;
         let offsetTop = getOuterHeight(this.container);
         this.alignTooltip(offsetLeft, -offsetTop);
     }
 
     alignBottom() {
         this.preAlign('bottom');
-        let offsetLeft = (getOuterWidth(this.el.nativeElement) - getOuterWidth(this.container)) / 2;
-        let offsetTop = getOuterHeight(this.el.nativeElement);
+        const el = this.activeElement;
+        let offsetLeft = (getOuterWidth(el) - getOuterWidth(this.container)) / 2;
+        let offsetTop = getOuterHeight(el);
         this.alignTooltip(offsetLeft, offsetTop);
     }
 
-    alignTooltip(offsetLeft, offsetTop) {
+    alignTooltip(offsetLeft: number, offsetTop: number) {
         let hostOffset = this.getHostOffset();
         let left = hostOffset.left + offsetLeft;
         let top = hostOffset.top + offsetTop;
