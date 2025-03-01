@@ -1,0 +1,36 @@
+
+@mixin border-green {
+    border: thin solid green;
+}
+
+.page-container {
+    display: flex;
+    flex-direction: column;
+    gap: 100px;
+    margin-top: 50px;
+    margin-bottom: 50px;
+    justify-items: center;
+    @include border-green
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    align-items: center;
+    @include border-green
+}
+
+button {
+    height: 400px;
+    width: 400px;
+    @include border-green
+}
+
+.row {
+    display: flex;
+    gap: 20px;
+    p[pTooltip] {
+        @include border-green
+    }
+}

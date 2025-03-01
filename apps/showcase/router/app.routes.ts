@@ -1,9 +1,11 @@
 import { AppMainComponent } from '@/components/layout/app.main.component';
+import { TestPageComponent } from '@/components/test-page/test-page.component';
 import { LandingComponent } from '@/pages/landing/landing.component';
 import { Routes } from '@angular/router';
 
 export const routes: Routes = [
     { path: '', component: LandingComponent, pathMatch: 'full' },
+    { path: 'testpage', component: TestPageComponent },
     {
         path: '',
         component: AppMainComponent,
